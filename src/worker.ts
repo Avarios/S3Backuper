@@ -1,22 +1,29 @@
 import fs from 'fs';
 import path from 'path';
+import minimist, { ParsedArgs } from 'minimist';
 
 type FleInfo = {
-    path:string,
-    fileSize?:number
+    path: string,
+    fileSize?: number
 }
 
-const main = () => {
-    const args = path.normalize(process.argv[2]);
-    console.log(`processing with args: ${args}`);
-    if (isFolder(args)) {
-        console.log(`Processing Folder: ${args}`)
-        const files = processFolder(args);
-        files.forEach(processFile);
-        console.log(`processed ${files.length} Files`);
-    } else {
-        console.log(`Processing File: ${args}`)
+const main = async () => {
+    try {
+        const args = minimist(process.argv);
+        const directory = args.path ? path.normalize(args.path) : path.normalize("/data");
+        console.log(`processing with args: ${directory}`);
+        if (isFolder(directory)) {
+            console.log(`Processing Folder: ${directory}`)
+            const files = processFolder(directory);
+            files.forEach(processFile);
+            console.log(`processed ${files.length} Files`);
+        } else {
+            console.log(`Processing File: ${directory}`)
+        }
+    } catch (error) {
+        console.error(error);
     }
+
 }
 
 const isFolder = (path: string): boolean => {
@@ -32,14 +39,14 @@ const processFolder = (folderPath: string): Array<FleInfo> => {
             return;
         }
         const filePath = path.join(folderPath, item.name)
-        const fileStat = fs.statSync(filePath,{ throwIfNoEntry:false });
-        files.push({ path:filePath, fileSize: fileStat?.size });
+        const fileStat = fs.statSync(filePath, { throwIfNoEntry: false });
+        files.push({ path: filePath, fileSize: fileStat?.size });
     })
     return files;
 }
 
 const processFile = (file: FleInfo): void => {
-    console.log(file.path , file.fileSize);
+    console.log(file.path, file.fileSize);
 }
 
 main();
